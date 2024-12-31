@@ -4,23 +4,32 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Database connection
-db_connection = mysql.connector.connect(
-    host="mysql.hostinger.com",
-    database="u857747424_classymama",
-    user="u857747424_classy",
-    password="Kabuljan@123"
-)
-
-cursor = db_connection.cursor()
+try:
+    db_connection = mysql.connector.connect(
+        host="mysql.hostinger.com",
+        database="u857747424_classymama",
+        user="u857747424_classy",
+        password="Kabuljan@123"
+    )
+    cursor = db_connection.cursor()
+except mysql.connector.Error as err:
+    print(f"Error: {err}")
+    exit(1)
 
 # Load feedback and recommendations
-feedback_query = "SELECT * FROM feedback"
-cursor.execute(feedback_query)
-feedback_data = cursor.fetchall()
+try:
+    feedback_query = "SELECT * FROM feedback"
+    cursor.execute(feedback_query)
+    feedback_data = cursor.fetchall()
 
-recommendations_query = "SELECT * FROM fashion_recommendations"
-cursor.execute(recommendations_query)
-recommendations_data = cursor.fetchall()
+    recommendations_query = "SELECT * FROM fashion_recommendations"
+    cursor.execute(recommendations_query)
+    recommendations_data = cursor.fetchall()
+except mysql.connector.Error as err:
+    print(f"Error executing query: {err}")
+    cursor.close()
+    db_connection.close()
+    exit(1)
 
 # Convert to pandas DataFrames for processing
 feedback_df = pd.DataFrame(feedback_data, columns=['id', 'query', 'recommendation_id', 'feedback_score', 'feedback_time'])
@@ -35,10 +44,15 @@ for _, row in feedback_df.iterrows():
         recommendations_df.loc[recommendations_df['id'] == row['recommendation_id'], 'score'] -= 1
 
 # Update the database with new scores
-for _, row in recommendations_df.iterrows():
-    update_query = f"UPDATE fashion_recommendations SET score = {row['score']} WHERE id = {row['id']}"
-    cursor.execute(update_query)
+try:
+    for _, row in recommendations_df.iterrows():
+        update_query = f"UPDATE fashion_recommendations SET score = {row['score']} WHERE id = {row['id']}"
+        cursor.execute(update_query)
+    db_connection.commit()
+except mysql.connector.Error as err:
+    print(f"Error updating database: {err}")
 
-db_connection.commit()
+# Close the connection
 cursor.close()
 db_connection.close()
+print("Database updated successfully!")
