@@ -5,10 +5,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Database connection
 db_connection = mysql.connector.connect(
-    $server = 'mysql.hostinger.com';
-$dbname = 'u857747424_classymama';
-$username = 'u857747424_classy';
-$password = 'Kabuljan@123';
+    host="mysql.hostinger.com",
+    database="u857747424_classymama",
+    user="u857747424_classy",
+    password="Kabuljan@123"
 )
 
 cursor = db_connection.cursor()
